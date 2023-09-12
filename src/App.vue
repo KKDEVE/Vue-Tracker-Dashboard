@@ -59,8 +59,12 @@ watch(weights, newWeights =>{
 <template>
   <header>
     <div class="logo">
-      <img src="" alt="">
+      <img src="../public/asset/logo.png" alt="">
       <span>TRACKER</span>
+    </div>
+    <div class="on">
+      <div>ON</div>
+      <img src="../public/asset/down.png" alt="">
     </div>
     
   </header>
