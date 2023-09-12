@@ -1,30 +1,102 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import {ref, shallowRef, computed, watch, nextTick} from  'vue'
+import Chart from 'chart.js/auto'
+
+const weights = ref([])
+const weightChartEl = ref(null)
+const weightChart = shallowRef(null)
+const weightInput = ref(60.0)
+const currentWeight = computed(()=>{
+  return weights.value.sort((a,b)=>b.date-a.date)[0]||{
+    weight: 0
+  }
+})
+const addWeight=()=>{
+  weights.value.push({
+    weight: weightInput.value,
+    date: new Date().getTime()
+  })
+}
+
+watch(weights, newWeights =>{
+  const ws = [...newWeights]
+  if (weightChart.value){
+    weightChart.value.data.labels = 
+    ws.sort((a,b)=> a.date - b.date).map(w=>new Date(w.date).toLocaleDateString())
+    .slice(-20)
+
+    weightChart.value.data.datasets[0].data = 
+    ws.sort((a,b)=> a.date - b.date).map(w=> w.weight)
+    .slice(-20)
+
+    weightChart.value.update()
+    return
+  }
+
+  nextTick(()=>{
+    weightChart.value = new Chart(weightChartEl.value.getContext('2d'),{
+      type: "line",
+      data:{
+        labels: ws.sort((a,b)=> a.date - b.date).map(w=>new Date(w.date).toLocaleDateString()),
+      datasets:[
+          { label:"Weight",
+            data:ws.sort((a,b)=> a.date - b.date).map(w=> w.weight),
+            backgroudnColor: "green",
+            borderColor:"yellow",
+            borderWidth: 1,
+            fill: true
+          }  ]
+      },
+      options:{responsive:true,
+      maintainAspectRatio: false}
+    })
+  })
+  console.log(ws)
+
+}, {deep: true})
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <header>
+    <div class="logo">
+      <img src="" alt="">
+      <span>TRACKER</span>
+    </div>
+    
+  </header>
+   <h2>jklsdjklasd</h2>
+   <div class="current">
+    <span>{{currentWeight.weight}}</span>
+    <small>Current weight(kg)</small>
+   </div>
+   <form @submit.prevent="addWeight">
+    <input type="number" 
+    step="0.1"  v-model="weightInput" />
+    <input type="submit" value="Add weight" />
+   </form>
+
+   <div v-if="weights && weights.length > 0">
+    <h2>Last 20 days</h2>
+    <div class="canvas-box">
+      <canvas ref="weightChartEl"></canvas>
+    </div>
+    <div class="weight-history">
+      <h2>
+        Weight History
+      </h2>
+      <ul>
+        <li v-for="weight in weights">
+          <span>
+            {{weight.weight}}kg
+          </span>
+          <small>
+            {{new Date(weight.date).toLocaleDateString()}}
+          </small>
+        </li>
+      </ul>
+    </div>
+   </div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
+<style >
 </style>
